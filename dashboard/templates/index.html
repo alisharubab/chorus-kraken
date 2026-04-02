@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHORUS ✨ Sentinel AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="glow-bg"></div>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <h1>CHORUS <span>Sentinel AI</span></h1>
+                <p class="subtitle">Multi-Agent Voting Engine</p>
+                <div class="system-title">SYSTEM DECISION</div>
+            </div>
+            <div class="status-badge pulse">
+                <span class="dot"></span> Live
+            </div>
+        </header>
+
+        <main>
+            <section class="meta-dashboard">
+                <div class="card meta-card">
+                    <div class="card-header">
+                        <h2 id="market-pair">XBTCUSD</h2>
+                        <span id="cycle-time" class="timestamp">--</span>
+                    </div>
+                    <div class="decision-display">
+                        <div id="meta-decision" class="decision-pill HOLD">HOLD</div>
+                        <p id="meta-reason" class="reason-text">Awaiting consensus...</p>
+                    </div>
+                </div>
+                
+                <div class="card contracts-card">
+                    <h2>Layer 2 Contracts</h2>
+                    <ul class="contract-list">
+                        <li><span>Identity:</span> <code id="c-identity">--</code></li>
+                        <li><span>Reputation:</span> <code id="c-reputation">--</code></li>
+                        <li><span>Validation:</span> <code id="c-validation">--</code></li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="agents-grid" id="agents-grid">
+                <!-- Agent cards will be injected here -->
+            </section>
+        </main>
+    </div>
+
+    <!-- Template for Agent Card -->
+    <template id="agent-template">
+        <div class="card agent-card">
+            <div class="agent-header">
+                <h3 class="agent-name">Agent Name</h3>
+                <span class="agent-id">ID: #</span>
+            </div>
+            <div class="agent-vote">
+                <div class="vote-direction">HOLD</div>
+                <div class="confidence">
+                    <div class="progress-bar"><div class="fill" style="width: 0%;"></div></div>
+                    <span>0%</span>
+                </div>
+            </div>
+            <p class="agent-reason">Reasoning...</p>
+            <div class="reputation-score">
+                <span>Reputation</span>
+                <strong class="rep-value">50</strong>
+            </div>
+        </div>
+    </template>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
