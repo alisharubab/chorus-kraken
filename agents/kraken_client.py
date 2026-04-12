@@ -1,7 +1,7 @@
 """
 CHORUS -- Kraken REST API Client
 Pure-Python Kraken trading client using REST API + HMAC-SHA512 authentication.
-This is the fallback when kraken-cli binary is not installed.
+This is the fallback when Kraken CLI is unavailable.
 
 Supports:
   - Account balance
@@ -19,6 +19,7 @@ import hmac
 import hashlib
 import base64
 import urllib.parse
+import subprocess
 
 import requests
 from dotenv import load_dotenv
@@ -31,6 +32,83 @@ load_dotenv()
 KRAKEN_API_URL = 'https://api.kraken.com'
 API_KEY = os.getenv('KRAKEN_API_KEY', '')
 API_SECRET = os.getenv('KRAKEN_API_SECRET', '')
+KRAKEN_CLI_PREFIX = ['wsl', 'kraken']
+
+
+def _run_wsl_kraken(args, timeout=30):
+    """
+    Run Kraken CLI inside WSL.
+    First try direct `wsl kraken ...`, then fallback to `wsl bash -lc` for PATH-loaded shells.
+    """
+    direct_cmd = [*KRAKEN_CLI_PREFIX, *args]
+    result = subprocess.run(
+        direct_cmd,
+        capture_output=True,
+        text=True,
+        encoding='utf-8',
+        errors='replace',
+        timeout=timeout
+    )
+    if result.returncode == 0:
+        return result
+
+    shell_cmd = ' '.join(['kraken', *args])
+    fallback_cmd = ['wsl', 'bash', '-lc', shell_cmd]
+    return subprocess.run(
+        fallback_cmd,
+        capture_output=True,
+        text=True,
+        encoding='utf-8',
+        errors='replace',
+        timeout=timeout
+    )
+
+
+def cli_balance() -> dict:
+    """
+    Run Kraken CLI balance command using the installed CLI format.
+    Command: kraken balance -o json
+    """
+    try:
+        result = _run_wsl_kraken(['balance', '-o', 'json'], timeout=20)
+        if result.returncode != 0:
+            return {'error': [result.stderr.strip() or result.stdout.strip() or 'Kraken CLI balance failed']}
+        return json.loads(result.stdout) if result.stdout.strip() else {}
+    except FileNotFoundError:
+        return {'error': ['Kraken CLI not found on PATH']}
+    except subprocess.TimeoutExpired:
+        return {'error': ['Kraken CLI balance command timed out']}
+    except json.JSONDecodeError as e:
+        return {'error': [f'Invalid JSON from Kraken CLI balance: {e}']}
+    except Exception as e:
+        return {'error': [str(e)]}
+
+
+def cli_paper_order(direction: str, pair: str, volume: str) -> dict:
+    """
+    Run Kraken paper trade command using the installed CLI format.
+    Example: kraken paper buy XBTUSD 0.001
+    """
+    side = direction.lower()
+    if side not in ['buy', 'sell']:
+        return {'error': [f'Invalid direction: {direction}']}
+
+    try:
+        result = _run_wsl_kraken(['paper', side, pair, str(volume)], timeout=30)
+        if result.returncode != 0:
+            return {'error': [result.stderr.strip() or result.stdout.strip() or 'Kraken CLI paper order failed']}
+
+        stdout = result.stdout.strip()
+        try:
+            return json.loads(stdout) if stdout else {'result': 'ok', 'raw_output': ''}
+        except json.JSONDecodeError:
+            return {'result': 'ok', 'raw_output': stdout}
+    except FileNotFoundError:
+        return {'error': ['Kraken CLI not found on PATH']}
+    except subprocess.TimeoutExpired:
+        return {'error': ['Kraken CLI paper command timed out']}
+    except Exception as e:
+        return {'error': [str(e)]}
 
 
 def _kraken_signature(urlpath: str, data: dict, secret: str) -> str:
