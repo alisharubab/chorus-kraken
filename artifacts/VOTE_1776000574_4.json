@@ -1,0 +1,12 @@
+{
+  "agent_id": 4,
+  "agent_name": "SentimentAgent",
+  "pair": "XBTUSD",
+  "direction": "HOLD",
+  "confidence": 50,
+  "reason": "Neutral: volume 1.0x avg, price -0.55%",
+  "volume_ratio": 1.05,
+  "price_change_pct": -0.55,
+  "timestamp": 1776000566,
+  "signature": "0xffd462a15027c443f53774746f1d78fedc04ad32e61b2a5dbbabc09430e96c791d08e1f85f87d6d4674d83c21cf3c16c01c60d7efc8bdee3dc858060bc1149c81c"
+}

@@ -1,0 +1,12 @@
+{
+  "agent_id": 1,
+  "agent_name": "TrendAgent",
+  "pair": "XBTUSD",
+  "direction": "SELL",
+  "confidence": 100,
+  "reason": "Bearish crossover: SMA10=71490.94 < SMA30=72420.12",
+  "sma_10": 71490.94,
+  "sma_30": 72420.12,
+  "timestamp": 1776002398,
+  "signature": "0x5330b0b4a581781add7174a6ea1cc704e101e68eb343dee18092b66f9751404472be3f445ee2e66fb9df252de711b4ce55ce4f09a29bcdbf0a13318e953635cc1b"
+}

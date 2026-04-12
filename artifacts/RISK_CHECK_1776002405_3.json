@@ -1,0 +1,13 @@
+{
+  "agent_id": 3,
+  "agent_name": "RiskSentinel",
+  "pair": "XBTUSD",
+  "direction": "PROCEED",
+  "confidence": 80,
+  "reason": "Risk OK. Daily PnL: 0.00%, Position limit: 10%",
+  "daily_pnl": 0.0,
+  "max_daily_loss": 2.0,
+  "max_position_size": 0.1,
+  "timestamp": 1776002399,
+  "signature": "0x7f0b6c0de566bea252f4bd3b99a530314a63d1c8cc461ff7dcc7c396d065ce8209872b69280f8c6c5d252b460335f2882260cbc5a51eac7f827ee2f79da8a0b01c"
+}

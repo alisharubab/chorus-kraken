@@ -1,0 +1,10 @@
+{
+  "agent_id": 2,
+  "agent_name": "ReversalAgent",
+  "pair": "XBTUSD",
+  "direction": "HOLD",
+  "confidence": 0,
+  "reason": "Insufficient data for RSI calculation",
+  "timestamp": 1775999985,
+  "signature": "0x349266e3b714fb459bf8c1b3644aa0fc56ede5b2236b06e7ec1f1ed3a09d3dd05e953b891a945037079bd39295673a866ca73a1b4ae8be2e4175dc7ccfbd221e1b"
+}
