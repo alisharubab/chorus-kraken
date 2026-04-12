@@ -4,7 +4,7 @@ The decision engine that:
   1. Collects votes from all 4 sub-agents
   2. Weighs them by on-chain reputation scores
   3. Checks for Risk Sentinel veto
-  4. Fires trades through Kraken CLI / Python REST API
+  4. Fires trades through Kraken paper CLI / Python REST API
   5. Logs ALL validation artifacts on-chain
 """
 import os
@@ -49,6 +49,36 @@ TRADE_THRESHOLD = 60    # Need 60% weighted signal to execute a trade
 RISK_VETO_ID = 3        # Agent ID of the Risk Sentinel
 TRADE_PAIR = 'XBTUSD'   # Default trading pair
 TRADE_VOLUME = '0.001'  # Conservative: ~$60-90 per trade
+KRAKEN_CLI_PREFIX = ['wsl', 'kraken']
+
+
+def _run_wsl_kraken(args, timeout=30):
+    """
+    Run Kraken CLI inside WSL.
+    First try direct `wsl kraken ...`, then fallback to `wsl bash -lc` for PATH-loaded shells.
+    """
+    direct_cmd = [*KRAKEN_CLI_PREFIX, *args]
+    result = subprocess.run(
+        direct_cmd,
+        capture_output=True,
+        text=True,
+        encoding='utf-8',
+        errors='replace',
+        timeout=timeout
+    )
+    if result.returncode == 0:
+        return result
+
+    shell_cmd = ' '.join(['kraken', *args])
+    fallback_cmd = ['wsl', 'bash', '-lc', shell_cmd]
+    return subprocess.run(
+        fallback_cmd,
+        capture_output=True,
+        text=True,
+        encoding='utf-8',
+        errors='replace',
+        timeout=timeout
+    )
 
 
 # ----------------------------------------------
@@ -147,38 +177,32 @@ def tally_votes(votes: list) -> dict:
 def execute_trade(pair, direction):
     """
     Execute a trade via Kraken.
-    Strategy: Try kraken-cli binary first, fall back to Python REST client.
+    Strategy: Try Kraken paper CLI first, fall back to Python REST client.
 
     Returns the Kraken response dict on success, or a trade_intent dict on failure.
     """
     volume = TRADE_VOLUME
     order_type = 'buy' if direction == 'BUY' else 'sell'
 
-    # --- Attempt 1: Try kraken-cli binary ---
-    cli_cmd = [
-        'kraken-cli', 'order', 'create',
-        '--type', order_type,
-        '--pair', pair,
-        '--volume', volume,
-        '--output', 'json'
-    ]
-
+    # --- Attempt 1: Try Kraken paper CLI ---
     try:
-        result = subprocess.run(cli_cmd, capture_output=True, text=True, timeout=30)
+        result = _run_wsl_kraken(['paper', order_type, pair, volume], timeout=30)
         if result.returncode == 0:
-            response = json.loads(result.stdout)
-            print(f'  [OK] Order placed via kraken-cli: {response}')
-            return _handle_trade_success(pair, direction, volume, response, 'kraken-cli')
+            stdout = result.stdout.strip()
+            try:
+                response = json.loads(stdout) if stdout else {'raw_output': ''}
+            except json.JSONDecodeError:
+                response = {'raw_output': stdout}
+            print(f'  [OK] Paper trade submitted via Kraken CLI')
+            return _handle_trade_success(pair, direction, volume, response, 'kraken-paper-cli')
         else:
-            print(f'  [WARN] kraken-cli returned error: {result.stderr.strip()}')
+            print(f'  [WARN] Kraken CLI returned error: {result.stderr.strip()}')
     except FileNotFoundError:
-        print(f'  [INFO] kraken-cli not found on PATH -- trying Python REST client...')
+        print(f'  [INFO] Kraken CLI not found on PATH -- trying Python REST client...')
     except subprocess.TimeoutExpired:
-        print(f'  [WARN] kraken-cli timed out')
-    except json.JSONDecodeError:
-        print(f'  [WARN] kraken-cli returned invalid JSON')
+        print(f'  [WARN] Kraken CLI timed out')
     except Exception as e:
-        print(f'  [WARN] kraken-cli error: {e}')
+        print(f'  [WARN] Kraken CLI error: {e}')
 
     # --- Attempt 2: Python REST client ---
     try:
@@ -196,7 +220,7 @@ def execute_trade(pair, direction):
         return _handle_trade_success(pair, direction, volume, result_data, 'kraken-rest-api')
 
     except ImportError:
-        print(f'  [FAIL] Neither kraken-cli nor kraken_client.py available')
+        print(f'  [FAIL] Neither Kraken CLI nor kraken_client.py available')
         return _handle_trade_fallback(pair, direction, volume, 'No Kraken client available')
     except Exception as e:
         print(f'  [FAIL] Kraken REST API error: {e}')
