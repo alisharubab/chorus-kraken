@@ -57,7 +57,7 @@ def analyze(pair='XBTUSD') -> dict:
     candles = get_kraken_ohlcv(pair=pair, interval=60)
 
     if not candles or len(candles) < 21:
-        return {
+        vote = {
             'agent_id': AGENT_ID,
             'agent_name': AGENT_NAME,
             'pair': pair,
@@ -66,6 +66,9 @@ def analyze(pair='XBTUSD') -> dict:
             'reason': 'Insufficient data for sentiment analysis',
             'timestamp': int(time.time())
         }
+        if PRIVATE_KEY and PRIVATE_KEY.startswith('0x'):
+            vote['signature'] = sign_vote(vote, PRIVATE_KEY)
+        return vote
 
     volume_ratio, price_change, avg_vol = compute_volume_sentiment(candles)
 
