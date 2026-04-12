@@ -103,7 +103,14 @@ def log_artifact_onchain(agent_id: int, artifact_type: str, artifact_data: dict)
         })
 
         signed = account.sign_transaction(txn)
-        tx_hash = w3.eth.send_raw_transaction(signed.raw_transaction)
+        # web3/eth-account versions expose either raw_transaction or rawTransaction
+        raw_tx = getattr(signed, 'raw_transaction', None)
+        if raw_tx is None:
+            raw_tx = getattr(signed, 'rawTransaction', None)
+        if raw_tx is None:
+            raise RuntimeError('Could not read signed raw transaction bytes')
+
+        tx_hash = w3.eth.send_raw_transaction(raw_tx)
         receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
 
         print(f'  [OK] Artifact logged on-chain!')
