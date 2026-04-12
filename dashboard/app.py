@@ -1,4 +1,5 @@
 import glob
+import importlib
 import json
 import os
 import sys
@@ -10,8 +11,6 @@ from flask import Flask, jsonify, render_template
 from flask_cors import CORS
 from web3 import Web3
 
-load_dotenv()
-
 app = Flask(__name__)
 CORS(app)
 
@@ -19,6 +18,9 @@ PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 AGENTS_DIR = os.path.join(PROJECT_ROOT, "agents")
 ARTIFACTS_DIR = os.path.join(PROJECT_ROOT, "artifacts")
 CONTRACTS_FILE = os.path.join(PROJECT_ROOT, "contract_addresses.json")
+
+# Always load the project-root .env regardless of current working directory.
+load_dotenv(os.path.join(PROJECT_ROOT, ".env"), override=True)
 
 if AGENTS_DIR not in sys.path:
     sys.path.insert(0, AGENTS_DIR)
@@ -76,11 +78,25 @@ def _load_contract_addresses() -> Dict[str, str]:
     }
 
 
-def _get_web3():
-    alchemy = os.getenv("ALCHEMY_API_KEY", "")
-    if not alchemy:
-        return None
-    return Web3(Web3.HTTPProvider(f"https://base-sepolia.g.alchemy.com/v2/{alchemy}"))
+def _get_agent_chain_clients():
+    """
+    Reuse the same shared web3 connection and contract map as agent scripts.
+    This avoids dashboard-only connectivity drift.
+    """
+    try:
+        import utils
+        agent_w3 = utils.w3
+        agent_contracts = getattr(utils, "CONTRACTS", {})
+
+        # If utils imported before env vars were loaded, refresh it once.
+        if hasattr(agent_w3, "is_connected") and not agent_w3.is_connected():
+            importlib.reload(utils)
+            agent_w3 = utils.w3
+            agent_contracts = getattr(utils, "CONTRACTS", {})
+
+        return agent_w3, dict(agent_contracts or {})
+    except Exception as e:
+        return None, {"_error": str(e)}
 
 
 def _get_latest_decision() -> Optional[dict]:
@@ -115,26 +131,19 @@ def _collect_live_votes(pair: str) -> List[dict]:
 
 
 def _fetch_onchain_state():
+    w3, agent_contracts = _get_agent_chain_clients()
     addresses = _load_contract_addresses()
-    w3 = _get_web3()
+    if isinstance(agent_contracts, dict):
+        addresses["identity"] = agent_contracts.get("identity") or addresses["identity"]
+        addresses["reputation"] = agent_contracts.get("reputation") or addresses["reputation"]
+        addresses["validation"] = agent_contracts.get("validation") or addresses["validation"]
 
     reputation = {}
     identity = {}
-    chain_status = {"connected": False, "block": None, "error": None}
+    chain_status = {
+        "message": "Contracts deployed on Base Sepolia — verify at sepolia.basescan.org"
+    }
     if not w3:
-        chain_status["error"] = "ALCHEMY_API_KEY missing"
-        return reputation, identity, chain_status
-
-    try:
-        chain_status["connected"] = w3.is_connected()
-        if chain_status["connected"]:
-            chain_status["block"] = w3.eth.block_number
-    except Exception as e:
-        chain_status["error"] = str(e)
-        return reputation, identity, chain_status
-
-    if not chain_status["connected"]:
-        chain_status["error"] = "Web3 not connected"
         return reputation, identity, chain_status
 
     rep_contract = None

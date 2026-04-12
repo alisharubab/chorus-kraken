@@ -4,6 +4,15 @@
 
 ---
 
+
+## Live System Status
+- CHORUS is actively running in live 15-minute decision cycles.
+- Agent votes, risk checks, and meta-decisions are being generated continuously.
+- Validation artifacts are being logged on-chain on Base Sepolia with transaction hashes for auditability.
+- Dashboard is available locally at `http://127.0.0.1:5000` for real-time monitoring.
+
+---
+
 ## 📖 What is CHORUS?
 **CHORUS** is a decentralized, multi-agent AI trading system. Instead of relying on a single "black-box" trading bot to hold capital, CHORUS orchestrates a "senate" of specialized AI agents that debate and vote on market positioning. 
 
@@ -28,6 +37,17 @@ CHORUS relies on three separate smart contracts handling ERC-8004 identity verif
 * **Identity Registry**: `0xc964Fc92AfE6cE988DC9D56Bf384FBc16235BdAa`
 * **Reputation Registry**: `0xe0020De74c15b176C9cd8f1770437C89da428886`
 * **Validation Registry**: `0xE4d30c7a4B3e31d52566bE57Ad3Db042361E3c13`
+
+---
+
+
+## Leaderboard & On-Chain Activity
+Use these deployed contracts for hackathon leaderboard verification and on-chain activity review:
+
+- **Identity Registry**: `0xc964Fc92AfE6cE988DC9D56Bf384FBc16235BdAa`
+- **Reputation Registry**: `0xe0020De74c15b176C9cd8f1770437C89da428886`
+- **Validation Registry**: `0xE4d30c7a4B3e31d52566bE57Ad3Db042361E3c13`
+- **Block Explorer**: https://sepolia.basescan.org
 
 ---
 
@@ -64,6 +84,15 @@ Once you have your `.env` configured, hook your credentials natively into the Kr
 python scripts/setup_kraken_config.py
 ```
 
+
+Run the core system in this command order:
+```bash
+python scripts/setup_kraken_config.py
+python agents/meta_agent.py
+python dashboard/app.py
+```
+
+
 **To start the Automated Trading Suite:**
 This runs the full polling strategy check, fetching live data on 15 minute cycles.
 ```bash
@@ -81,6 +110,24 @@ python dashboard/app.py
 ```bash
 python scripts/test_cycle.py
 ```
+
+---
+
+
+## Validation Artifacts
+CHORUS logs every critical decision artifact for full auditability:
+
+- Every **agent vote** is serialized and signed.
+- Every **risk check** from Risk Sentinel is logged.
+- Every **trade decision** (including holds, intents, and confirmations) is written to local artifacts and anchored on-chain with a transaction hash.
+
+Sample first live trade transaction hash:
+
+- `0x18809fe48573e3f5c6796f19f68fe6f26cbdc6c85bc5f485fd3adf29cafdb2f0`
+
+All transaction activity can be verified on Base Sepolia via:
+
+- https://sepolia.basescan.org
 
 ---
 

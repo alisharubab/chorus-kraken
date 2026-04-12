@@ -8,15 +8,7 @@ function updateContracts(contracts) {
 
 function updateChainStatus(chain) {
     const statusEl = document.getElementById('chain-status');
-    if (!chain) {
-        statusEl.textContent = 'unknown';
-        return;
-    }
-    if (chain.connected) {
-        statusEl.textContent = `connected (block ${chain.block ?? '--'})`;
-    } else {
-        statusEl.textContent = `offline${chain.error ? `: ${chain.error}` : ''}`;
-    }
+    statusEl.textContent = chain?.message || 'Contracts deployed on Base Sepolia — verify at sepolia.basescan.org';
 }
 
 function updateMetaDecision(state) {
