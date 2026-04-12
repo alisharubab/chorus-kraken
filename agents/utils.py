@@ -115,17 +115,34 @@ def get_prism_data(endpoint='market/sentiment'):
 def check_kraken_balance():
     """
     Check Kraken account balance.
-    Tries kraken-cli first, falls back to Python REST client.
+    Tries Kraken CLI first, falls back to Python REST client.
     Returns a dict of asset -> balance, or None on error.
     """
     import subprocess
 
-    # Try kraken-cli first
-    try:
-        result = subprocess.run(
-            ['kraken-cli', 'account', 'balance', '--output', 'json'],
-            capture_output=True, text=True, timeout=15
+    def run_wsl_kraken(args, timeout=15):
+        direct = subprocess.run(
+            ['wsl', 'kraken', *args],
+            capture_output=True,
+            text=True,
+            encoding='utf-8',
+            errors='replace',
+            timeout=timeout
         )
+        if direct.returncode == 0:
+            return direct
+        return subprocess.run(
+            ['wsl', 'bash', '-lc', ' '.join(['kraken', *args])],
+            capture_output=True,
+            text=True,
+            encoding='utf-8',
+            errors='replace',
+            timeout=timeout
+        )
+
+    # Try Kraken CLI first (expected format: kraken balance -o json)
+    try:
+        result = run_wsl_kraken(['balance', '-o', 'json'], timeout=15)
         if result.returncode == 0:
             return json.loads(result.stdout)
     except (FileNotFoundError, subprocess.TimeoutExpired, json.JSONDecodeError):
@@ -140,7 +157,7 @@ def check_kraken_balance():
             return None
         return resp.get('result', {})
     except ImportError:
-        print("  [WARN] kraken_client.py not found and kraken-cli not installed")
+        print("  [WARN] kraken_client.py not found and Kraken CLI not installed")
         return None
     except Exception as e:
         print(f"  [WARN] Kraken balance check failed: {e}")
