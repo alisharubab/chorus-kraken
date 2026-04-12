@@ -6,6 +6,9 @@ import json
 import hashlib
 import os
 import time
+import shlex
+import subprocess
+import urllib.parse
 import requests
 
 from web3 import Web3
@@ -40,15 +43,61 @@ CONTRACTS = load_contracts()
 # ----------------------------------------------
 # Market Data -- Kraken REST API (public, no auth)
 # ----------------------------------------------
+def _kraken_public_request(endpoint: str, params: dict):
+    """
+    Fetch Kraken public API JSON.
+    Strategy:
+      1) Try native Windows requests
+      2) If that fails (DNS/proxy/network), fallback to WSL curl
+    """
+    base_url = "https://api.kraken.com/0/public"
+    query = urllib.parse.urlencode(params or {})
+    url = f"{base_url}/{endpoint}" + (f"?{query}" if query else "")
+
+    # Attempt 1: Windows Python requests
+    try:
+        return requests.get(url, timeout=15).json()
+    except Exception as native_error:
+        # Attempt 2: WSL curl fallback
+        try:
+            cmd = f"curl -sS --max-time 15 {shlex.quote(url)}"
+            result = subprocess.run(
+                ["wsl", "bash", "-lc", cmd],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                timeout=25,
+            )
+            if result.returncode != 0:
+                stderr = result.stderr.strip() or result.stdout.strip() or "unknown WSL curl error"
+                print(f"Error fetching Kraken {endpoint} via WSL curl: {stderr}")
+                print(f"Original Windows request error: {native_error}")
+                return {}
+            return json.loads(result.stdout)
+        except Exception as wsl_error:
+            print(f"Error fetching Kraken {endpoint}: native={native_error}; wsl={wsl_error}")
+            return {}
+
+
+def _first_result_key(result_obj: dict):
+    """Kraken payloads may include helper keys like 'last'; choose the data key."""
+    if not isinstance(result_obj, dict):
+        return None
+    keys = [k for k in result_obj.keys() if k != "last"]
+    return keys[0] if keys else None
+
+
 def get_kraken_price(pair='XBTUSD'):
     """Fetch current price from Kraken REST API (public endpoint, no API key needed)."""
-    url = f'https://api.kraken.com/0/public/Ticker?pair={pair}'
     try:
-        r = requests.get(url, timeout=10).json()
+        r = _kraken_public_request("Ticker", {"pair": pair})
         if r.get('error') and len(r['error']) > 0:
             print(f"Kraken API error: {r['error']}")
             return None
-        key = list(r['result'].keys())[0]
+        key = _first_result_key(r.get("result", {}))
+        if not key:
+            return None
         return float(r['result'][key]['c'][0])  # Last trade price
     except Exception as e:
         print(f"Error fetching Kraken price: {e}")
@@ -59,13 +108,14 @@ def get_kraken_ohlcv(pair='XBTUSD', interval=60):
     Fetch hourly OHLCV candles from Kraken (public endpoint).
     Each candle: [time, open, high, low, close, vwap, volume, count]
     """
-    url = f'https://api.kraken.com/0/public/OHLC?pair={pair}&interval={interval}'
     try:
-        r = requests.get(url, timeout=10).json()
+        r = _kraken_public_request("OHLC", {"pair": pair, "interval": interval})
         if r.get('error') and len(r['error']) > 0:
             print(f"Kraken API error: {r['error']}")
             return []
-        key = list(r['result'].keys())[0]
+        key = _first_result_key(r.get("result", {}))
+        if not key:
+            return []
         return r['result'][key]
     except Exception as e:
         print(f"Error fetching Kraken OHLCV: {e}")

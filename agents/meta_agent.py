@@ -50,6 +50,10 @@ RISK_VETO_ID = 3        # Agent ID of the Risk Sentinel
 TRADE_PAIR = 'XBTUSD'   # Default trading pair
 TRADE_VOLUME = '0.001'  # Conservative: ~$60-90 per trade
 KRAKEN_CLI_PREFIX = ['wsl', 'kraken']
+TREND_AGENT_ID = 1
+TREND_MOMENTUM_REQUIRED_STREAK = 3
+TREND_MOMENTUM_REQUIRED_CONFIDENCE = 100
+META_STATE_FILE = os.path.join(os.path.dirname(__file__), '..', 'cache', 'meta_state.json')
 
 
 def _run_wsl_kraken(args, timeout=30):
@@ -96,6 +100,56 @@ def get_reputation_score(agent_id: int) -> int:
         except Exception as e:
             print(f"  [WARN] Could not fetch reputation for agent {agent_id}: {e}")
     return 50  # Default score
+
+
+def _load_meta_state() -> dict:
+    """Load persistent meta-agent state used for cross-cycle momentum tracking."""
+    try:
+        with open(META_STATE_FILE, 'r', encoding='utf-8') as f:
+            state = json.load(f)
+            if isinstance(state, dict):
+                return state
+    except FileNotFoundError:
+        pass
+    except Exception as e:
+        print(f'  [WARN] Could not read meta state file: {e}')
+    return {'trend_sell_100_streak': 0, 'last_updated': 0}
+
+
+def _save_meta_state(state: dict):
+    """Save persistent meta-agent state to cache/ for next cycle."""
+    try:
+        os.makedirs(os.path.dirname(META_STATE_FILE), exist_ok=True)
+        with open(META_STATE_FILE, 'w', encoding='utf-8') as f:
+            json.dump(state, f, indent=2)
+    except Exception as e:
+        print(f'  [WARN] Could not write meta state file: {e}')
+
+
+def _update_trend_sell_streak(votes: list) -> int:
+    """
+    Update and persist TrendAgent SELL@100 consecutive streak.
+    Returns the updated streak value.
+    """
+    state = _load_meta_state()
+    current_streak = int(state.get('trend_sell_100_streak', 0))
+
+    trend_vote = next((v for v in votes if v.get('agent_id') == TREND_AGENT_ID), None)
+    is_sell_100 = bool(
+        trend_vote
+        and trend_vote.get('direction') == 'SELL'
+        and int(trend_vote.get('confidence', 0)) >= TREND_MOMENTUM_REQUIRED_CONFIDENCE
+    )
+
+    if is_sell_100:
+        current_streak += 1
+    else:
+        current_streak = 0
+
+    state['trend_sell_100_streak'] = current_streak
+    state['last_updated'] = int(time.time())
+    _save_meta_state(state)
+    return current_streak
 
 
 # ----------------------------------------------
@@ -169,6 +223,45 @@ def tally_votes(votes: list) -> dict:
             'reason': f'No consensus. BUY:{buy_pct:.1f}% SELL:{sell_pct:.1f}% (need {TRADE_THRESHOLD}%)',
             'vote_breakdown': breakdown
         }
+
+
+def apply_consecutive_trend_trigger(votes: list, base_result: dict, trend_sell_streak: int) -> dict:
+    """
+    Optional momentum override:
+      If TrendAgent votes SELL at 100 confidence for N consecutive cycles,
+      force SELL regardless of weighted consensus.
+    Safety rule:
+      Risk Sentinel HOLD veto still overrides this trigger.
+    """
+    risk_veto = any(v.get('agent_id') == RISK_VETO_ID and v.get('direction') == 'HOLD' for v in votes)
+    if risk_veto:
+        return base_result
+
+    trend_vote = next((v for v in votes if v.get('agent_id') == TREND_AGENT_ID), None)
+    trend_is_sell_100 = bool(
+        trend_vote
+        and trend_vote.get('direction') == 'SELL'
+        and int(trend_vote.get('confidence', 0)) >= TREND_MOMENTUM_REQUIRED_CONFIDENCE
+    )
+
+    if trend_is_sell_100 and trend_sell_streak >= TREND_MOMENTUM_REQUIRED_STREAK:
+        override = dict(base_result)
+        override['decision'] = 'SELL'
+        override['signal'] = 100
+        override['reason'] = (
+            f'MOMENTUM TRIGGER: TrendAgent SELL at {TREND_MOMENTUM_REQUIRED_CONFIDENCE}% '
+            f'for {trend_sell_streak} consecutive cycles.'
+        )
+        override['trigger'] = {
+            'type': 'CONSECUTIVE_TREND_SELL',
+            'agent_id': TREND_AGENT_ID,
+            'required_confidence': TREND_MOMENTUM_REQUIRED_CONFIDENCE,
+            'required_streak': TREND_MOMENTUM_REQUIRED_STREAK,
+            'observed_streak': trend_sell_streak,
+        }
+        return override
+
+    return base_result
 
 
 # ----------------------------------------------
@@ -313,9 +406,16 @@ def run_cycle(pair='XBTUSD'):
         else:
             log_vote(v['agent_id'], v)
 
+    # Update cross-cycle momentum state (Trend SELL@100 streak)
+    trend_sell_streak = _update_trend_sell_streak(votes)
+    print(f'\n[MOMENTUM] Trend SELL@100 streak: {trend_sell_streak}/{TREND_MOMENTUM_REQUIRED_STREAK}')
+
     # Tally votes
     print('\n[TALLY] Tallying weighted votes...')
-    result = tally_votes(votes)
+    base_result = tally_votes(votes)
+    result = apply_consecutive_trend_trigger(votes, base_result, trend_sell_streak)
+    if result is not base_result and result.get('trigger', {}).get('type') == 'CONSECUTIVE_TREND_SELL':
+        print('  [OVERRIDE] Consecutive Trend SELL trigger fired -> forcing SELL decision')
 
     decision_tag = {'BUY': '[BUY]', 'SELL': '[SELL]', 'HOLD': '[HOLD]'}.get(result['decision'], '[--]')
     print(f'\n{"-"*60}')
@@ -328,6 +428,9 @@ def run_cycle(pair='XBTUSD'):
         'pair': pair,
         'votes': votes,
         'decision': result,
+        'meta_state': {
+            'trend_sell_100_streak': trend_sell_streak
+        },
         'cycle_timestamp': time.strftime("%Y-%m-%d %H:%M:%S"),
         'timestamp': int(time.time())
     }

@@ -1,0 +1,81 @@
+{
+  "type": "META_DECISION",
+  "pair": "XBTUSD",
+  "votes": [
+    {
+      "agent_id": 1,
+      "agent_name": "TrendAgent",
+      "pair": "XBTUSD",
+      "direction": "SELL",
+      "confidence": 100,
+      "reason": "Bearish crossover: SMA10=71593.85 < SMA30=72492.24",
+      "sma_10": 71593.85,
+      "sma_30": 72492.24,
+      "timestamp": 1775996835,
+      "signature": "0xd4648a3614bc8769c9507708c9959341c11f0633a7f136901a023bb97e472472697fe393f69befcb039a1ee8a0fae7aa5c6be2b9d2f6f34d945fe367673f2bcd1b"
+    },
+    {
+      "agent_id": 2,
+      "agent_name": "ReversalAgent",
+      "pair": "XBTUSD",
+      "direction": "BUY",
+      "confidence": 41,
+      "reason": "Oversold: RSI=16.18 < 30",
+      "rsi": 16.18,
+      "timestamp": 1775996840,
+      "signature": "0x06732c121c46a07fe001c8fb6e5ccc89b9338877f804c897c6df739b28e757603d190072fae7a54690f90ef6874880c19abca0a5711c6d8e44c64abe3b0615861c"
+    },
+    {
+      "agent_id": 3,
+      "agent_name": "RiskSentinel",
+      "pair": "XBTUSD",
+      "direction": "PROCEED",
+      "confidence": 80,
+      "reason": "Risk OK. Daily PnL: 0.00%, Position limit: 10%",
+      "daily_pnl": 0.0,
+      "max_daily_loss": 2.0,
+      "max_position_size": 0.1,
+      "timestamp": 1775996840,
+      "signature": "0x6f30757c1236beb0fe992bdd41df263e163b7a85fa1bc65e22da9775295eab0a36929bf8a46156b6b88678193657d374eae2b07ff100a85eb3c7a614e6a654891b"
+    },
+    {
+      "agent_id": 4,
+      "agent_name": "SentimentAgent",
+      "pair": "XBTUSD",
+      "direction": "HOLD",
+      "confidence": 50,
+      "reason": "Neutral: volume 0.4x avg, price -0.18%",
+      "volume_ratio": 0.39,
+      "price_change_pct": -0.18,
+      "timestamp": 1775996846,
+      "signature": "0x7f899c1d64f8efc9099aac73030d35252bca869c30a81120a379ff1cea570b527cc6a4620e2952dbb9e913bfb9984819b7d578cc1adaf5a5027122dffb8396601c"
+    }
+  ],
+  "decision": {
+    "decision": "HOLD",
+    "signal": 0,
+    "reason": "No consensus. BUY:13.7% SELL:33.3% (need 60%)",
+    "vote_breakdown": {
+      "TrendAgent": {
+        "direction": "SELL",
+        "confidence": 100,
+        "reputation": 50,
+        "weight": 50.0
+      },
+      "ReversalAgent": {
+        "direction": "BUY",
+        "confidence": 41,
+        "reputation": 50,
+        "weight": 20.5
+      },
+      "SentimentAgent": {
+        "direction": "HOLD",
+        "confidence": 50,
+        "reputation": 50,
+        "weight": 25.0
+      }
+    }
+  },
+  "cycle_timestamp": "2026-04-12 17:27:56",
+  "timestamp": 1775996876
+}
