@@ -37,7 +37,7 @@ def analyze(pair='XBTUSD') -> dict:
     candles = get_kraken_ohlcv(pair=pair, interval=60)
 
     if not candles or len(candles) < 30:
-        return {
+        vote = {
             'agent_id': AGENT_ID,
             'agent_name': AGENT_NAME,
             'pair': pair,
@@ -46,6 +46,9 @@ def analyze(pair='XBTUSD') -> dict:
             'reason': 'Insufficient candle data',
             'timestamp': int(time.time())
         }
+        if PRIVATE_KEY and PRIVATE_KEY.startswith('0x'):
+            vote['signature'] = sign_vote(vote, PRIVATE_KEY)
+        return vote
 
     sma_10 = compute_sma(candles, 10)
     sma_30 = compute_sma(candles, 30)
