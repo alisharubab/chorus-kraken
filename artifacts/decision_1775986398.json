@@ -1,0 +1,73 @@
+{
+  "type": "META_DECISION",
+  "pair": "XBTUSD",
+  "votes": [
+    {
+      "agent_id": 1,
+      "agent_name": "TrendAgent",
+      "pair": "XBTUSD",
+      "direction": "HOLD",
+      "confidence": 0,
+      "reason": "Insufficient candle data",
+      "timestamp": 1775986314
+    },
+    {
+      "agent_id": 2,
+      "agent_name": "ReversalAgent",
+      "pair": "XBTUSD",
+      "direction": "HOLD",
+      "confidence": 0,
+      "reason": "Insufficient data for RSI calculation",
+      "timestamp": 1775986316
+    },
+    {
+      "agent_id": 3,
+      "agent_name": "RiskSentinel",
+      "pair": "XBTUSD",
+      "direction": "PROCEED",
+      "confidence": 80,
+      "reason": "Risk OK. Daily PnL: 0.00%, Position limit: 10%",
+      "daily_pnl": 0.0,
+      "max_daily_loss": 2.0,
+      "max_position_size": 0.1,
+      "timestamp": 1775986316,
+      "signature": "0xd17d2eb69599c4c980b0c29529def14b1053c111b28fc1407865c0c4bf17aa2f7fe7b5d6d7939ac606b783e6bbd5ea44bc30972baadba06714fb7d1c9dffecea1c"
+    },
+    {
+      "agent_id": 4,
+      "agent_name": "SentimentAgent",
+      "pair": "XBTUSD",
+      "direction": "HOLD",
+      "confidence": 0,
+      "reason": "Insufficient data for sentiment analysis",
+      "timestamp": 1775986318
+    }
+  ],
+  "decision": {
+    "decision": "HOLD",
+    "signal": 0,
+    "reason": "No consensus. BUY:0.0% SELL:0.0% (need 60%)",
+    "vote_breakdown": {
+      "TrendAgent": {
+        "direction": "HOLD",
+        "confidence": 0,
+        "reputation": 50,
+        "weight": 0.0
+      },
+      "ReversalAgent": {
+        "direction": "HOLD",
+        "confidence": 0,
+        "reputation": 50,
+        "weight": 0.0
+      },
+      "SentimentAgent": {
+        "direction": "HOLD",
+        "confidence": 0,
+        "reputation": 50,
+        "weight": 0.0
+      }
+    }
+  },
+  "cycle_timestamp": "2026-04-12 14:33:18",
+  "timestamp": 1775986398
+}

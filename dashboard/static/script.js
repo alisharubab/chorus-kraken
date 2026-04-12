@@ -1,90 +1,128 @@
-const POLL_INTERVAL = 3000;
+﻿const POLL_INTERVAL = 4000;
 
-function updateContracts(data) {
-    if (data.identity) document.getElementById('c-identity').textContent = data.identity;
-    if (data.reputation) document.getElementById('c-reputation').textContent = data.reputation;
-    if (data.validation) document.getElementById('c-validation').textContent = data.validation;
+function updateContracts(contracts) {
+    document.getElementById('c-identity').textContent = contracts.identity || '--';
+    document.getElementById('c-reputation').textContent = contracts.reputation || '--';
+    document.getElementById('c-validation').textContent = contracts.validation || '--';
 }
 
-function updateMetaDecision(data) {
-    const dec = data.decision.decision || 'HOLD';
+function updateChainStatus(chain) {
+    const statusEl = document.getElementById('chain-status');
+    if (!chain) {
+        statusEl.textContent = 'unknown';
+        return;
+    }
+    if (chain.connected) {
+        statusEl.textContent = `connected (block ${chain.block ?? '--'})`;
+    } else {
+        statusEl.textContent = `offline${chain.error ? `: ${chain.error}` : ''}`;
+    }
+}
+
+function updateMetaDecision(state) {
+    const decision = state.decision || {};
+    const dec = decision.decision || 'HOLD';
+
     const el = document.getElementById('meta-decision');
     el.textContent = dec;
     el.className = `decision-pill bg-${dec} ${dec}`;
-    
-    document.getElementById('meta-reason').textContent = data.decision.reason;
-    document.getElementById('market-pair').textContent = data.pair;
-    document.getElementById('cycle-time').textContent = data.cycle_timestamp;
+
+    document.getElementById('meta-reason').textContent = decision.reason || 'No reason available';
+    document.getElementById('market-pair').textContent = state.pair || 'XBTUSD';
+    document.getElementById('cycle-time').textContent = state.cycle_timestamp || '--';
 }
 
-function getReputation(weights, agentName) {
-    if (weights && weights[agentName]) {
-        return weights[agentName].reputation || 50;
-    }
-    return 50;
-}
-
-function updateAgents(data) {
+function updateAgents(state) {
     const grid = document.getElementById('agents-grid');
     grid.innerHTML = '';
-    const template = document.getElementById('agent-template');
-    
-    const weights = data.decision.vote_breakdown;
 
-    data.votes.forEach(vote => {
+    const template = document.getElementById('agent-template');
+    const votes = state.current_votes || [];
+
+    if (!votes.length) {
+        grid.innerHTML = '<div class="card">No agent votes available yet.</div>';
+        return;
+    }
+
+    votes.forEach(vote => {
+        if (vote.error) {
+            const card = document.createElement('div');
+            card.className = 'card agent-card';
+            card.innerHTML = `<h3>Agent Error</h3><p class="agent-reason">${vote.error}</p>`;
+            grid.appendChild(card);
+            return;
+        }
+
         const clone = template.content.cloneNode(true);
-        const card = clone.querySelector('.agent-card');
-        
-        // Insert a space between lowercase and uppercase letters
-        const formattedName = vote.agent_name.replace(/([a-z])([A-Z])/g, '$1 $2');
+
+        const formattedName = (vote.agent_name || 'UnknownAgent').replace(/([a-z])([A-Z])/g, '$1 $2');
         clone.querySelector('.agent-name').textContent = formattedName;
-        clone.querySelector('.agent-id').textContent = `ID: ${vote.agent_id}`;
-        
+        clone.querySelector('.agent-id').textContent = `ID: ${vote.agent_id ?? '--'}`;
+
+        const direction = vote.direction || 'HOLD';
+        const confidence = Number(vote.confidence ?? 0);
+
         const dirEl = clone.querySelector('.vote-direction');
-        dirEl.textContent = vote.direction;
-        dirEl.className = `vote-direction ${vote.direction}`;
-        
-        clone.querySelector('.confidence span').textContent = `${vote.confidence}%`;
+        dirEl.textContent = direction;
+        dirEl.className = `vote-direction ${direction}`;
+
+        clone.querySelector('.confidence span').textContent = `${confidence}%`;
         const fill = clone.querySelector('.fill');
-        // Small timeout to allow css transition
         setTimeout(() => {
-            fill.style.width = `${vote.confidence}%`;
-            fill.className = `fill fill-${vote.direction}`;
+            fill.style.width = `${Math.max(0, Math.min(100, confidence))}%`;
+            fill.className = `fill fill-${direction}`;
         }, 50);
-        
-        clone.querySelector('.agent-reason').textContent = vote.reason || 'No specific reasoning provided.';
-        
-        const rep = getReputation(weights, vote.agent_name);
-        clone.querySelector('.rep-value').textContent = rep;
-        
+
+        clone.querySelector('.agent-reason').textContent = vote.reason || 'No reasoning available.';
+        clone.querySelector('.rep-value').textContent = vote.reputation ?? 50;
+
         grid.appendChild(clone);
     });
+}
+
+function updateArtifacts(state) {
+    const list = document.getElementById('artifact-list');
+    const items = state.recent_artifacts || [];
+    list.innerHTML = '';
+
+    if (!items.length) {
+        list.innerHTML = '<li class="artifact-item">No artifacts yet.</li>';
+        return;
+    }
+
+    items.slice(0, 8).forEach(item => {
+        const li = document.createElement('li');
+        li.className = 'artifact-item';
+        const ts = item.timestamp ? new Date(item.timestamp * 1000).toLocaleString() : '--';
+        li.textContent = `${item.artifact_type} | ${item.file} | ${ts}`;
+        list.appendChild(li);
+    });
+}
+
+function updateLastTrade(state) {
+    const t = state.last_trade_decision;
+    document.getElementById('trade-type').textContent = t?.artifact_type || 'No trade artifact yet';
+    document.getElementById('trade-file').textContent = t?.file || '--';
+    document.getElementById('trade-time').textContent = t?.timestamp ? new Date(t.timestamp * 1000).toLocaleString() : '--';
 }
 
 function pollState() {
     fetch('/api/state')
         .then(res => res.json())
-        .then(data => {
-            if (!data.error) {
-                updateMetaDecision(data);
-                updateAgents(data);
+        .then(state => {
+            if (state.error) {
+                console.error('Error fetching state:', state.error);
+                return;
             }
+            updateContracts(state.contracts || {});
+            updateChainStatus(state.chain_status);
+            updateMetaDecision(state);
+            updateAgents(state);
+            updateArtifacts(state);
+            updateLastTrade(state);
         })
-        .catch(err => console.error("Error fetching state:", err));
+        .catch(err => console.error('Error fetching state:', err));
 }
 
-function fetchContracts() {
-    fetch('/api/contracts')
-        .then(res => res.json())
-        .then(data => {
-            if (!data.error) {
-                updateContracts(data);
-            }
-        })
-        .catch(err => console.error("Error fetching contracts:", err));
-}
-
-// Initial fetch & set poll
-fetchContracts();
 pollState();
 setInterval(pollState, POLL_INTERVAL);

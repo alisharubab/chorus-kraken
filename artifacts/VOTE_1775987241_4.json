@@ -1,0 +1,10 @@
+{
+  "agent_id": 4,
+  "agent_name": "SentimentAgent",
+  "pair": "XBTUSD",
+  "direction": "HOLD",
+  "confidence": 0,
+  "reason": "Insufficient data for sentiment analysis",
+  "timestamp": 1775987234,
+  "signature": "0x1020d63378b8cb42d41f127d52f4702e8cc625ee4c050bfb34ed850a28148c563a6ab67ac8d7d82f0e4128681248baeafd381b7b92ff411e2af48d5e068e68261b"
+}

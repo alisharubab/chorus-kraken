@@ -1,0 +1,76 @@
+{
+  "type": "META_DECISION",
+  "pair": "XBTUSD",
+  "votes": [
+    {
+      "agent_id": 1,
+      "agent_name": "TrendAgent",
+      "pair": "XBTUSD",
+      "direction": "HOLD",
+      "confidence": 0,
+      "reason": "Insufficient candle data",
+      "timestamp": 1775987019,
+      "signature": "0x5cc8016468642fc7e708ecfe6ba45d9f64b3231c2d0db324056ed85a5a8c242d0cec0f682145c0c678fccc23603c806d37264f30f02dc89e5af9d1187fa275271b"
+    },
+    {
+      "agent_id": 2,
+      "agent_name": "ReversalAgent",
+      "pair": "XBTUSD",
+      "direction": "HOLD",
+      "confidence": 0,
+      "reason": "Insufficient data for RSI calculation",
+      "timestamp": 1775987019,
+      "signature": "0x559de38dd2c1634977e680928088c8720728a1fed89919cc8360d82785823f137c746d9afa319ad5e53271e30b43b97256cc0ccd93517322a62e2af18dabd9481c"
+    },
+    {
+      "agent_id": 3,
+      "agent_name": "RiskSentinel",
+      "pair": "XBTUSD",
+      "direction": "PROCEED",
+      "confidence": 80,
+      "reason": "Risk OK. Daily PnL: 0.00%, Position limit: 10%",
+      "daily_pnl": 0.0,
+      "max_daily_loss": 2.0,
+      "max_position_size": 0.1,
+      "timestamp": 1775987019,
+      "signature": "0x20ee7666251e637d91a2c111e8851372ac18d1d33cfea7bf2cc09f4515e5187b7eae1f372fa3f70c2d9017e7dfe4176ff7092011d9e30562b67fc3204c6de8971b"
+    },
+    {
+      "agent_id": 4,
+      "agent_name": "SentimentAgent",
+      "pair": "XBTUSD",
+      "direction": "HOLD",
+      "confidence": 0,
+      "reason": "Insufficient data for sentiment analysis",
+      "timestamp": 1775987019,
+      "signature": "0xa64ae066f024574212db13c272ca5560fa0309a115e1155df0334ca40cf3c77c53b7d651f4d67961a981814529bc90d0b0a5388dd569fb526337863d30874eaa1b"
+    }
+  ],
+  "decision": {
+    "decision": "HOLD",
+    "signal": 0,
+    "reason": "No consensus. BUY:0.0% SELL:0.0% (need 60%)",
+    "vote_breakdown": {
+      "TrendAgent": {
+        "direction": "HOLD",
+        "confidence": 0,
+        "reputation": 50,
+        "weight": 0.0
+      },
+      "ReversalAgent": {
+        "direction": "HOLD",
+        "confidence": 0,
+        "reputation": 50,
+        "weight": 0.0
+      },
+      "SentimentAgent": {
+        "direction": "HOLD",
+        "confidence": 0,
+        "reputation": 50,
+        "weight": 0.0
+      }
+    }
+  },
+  "cycle_timestamp": "2026-04-12 14:43:51",
+  "timestamp": 1775987031
+}
