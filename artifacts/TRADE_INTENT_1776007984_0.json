@@ -1,0 +1,9 @@
+{
+  "type": "TRADE_INTENT",
+  "pair": "XBTUSD",
+  "direction": "SELL",
+  "volume": "0.001",
+  "kraken_configured": false,
+  "error": "['HTTPSConnectionPool(host=\\'api.kraken.com\\', port=443): Max retries exceeded with url: /0/private/AddOrder (Caused by NameResolutionError(\"<urllib3.connection.HTTPSConnection object at 0x000001C1532FAFD0>: Failed to resolve \\'api.kraken.com\\' ([Errno 11001] getaddrinfo failed)\"))']",
+  "timestamp": 1776007984
+}
