@@ -1,0 +1,11 @@
+{
+  "agent_id": 2,
+  "agent_name": "ReversalAgent",
+  "pair": "XBTUSD",
+  "direction": "BUY",
+  "confidence": 12,
+  "reason": "Oversold: RSI=25.72 < 30",
+  "rsi": 25.72,
+  "timestamp": 1776011804,
+  "signature": "0xa8e29a8c43f73a78bce9061368609935d6482d5a4b8bf6f567307e15cf43068957396c30aacc6c7c2d83d08a4ce8f7f09dccf1fbbf3eedb2743972a6a355496a1b"
+}
