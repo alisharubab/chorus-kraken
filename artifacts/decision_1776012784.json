@@ -1,0 +1,91 @@
+{
+  "type": "META_DECISION",
+  "pair": "XBTUSD",
+  "votes": [
+    {
+      "agent_id": 1,
+      "agent_name": "TrendAgent",
+      "pair": "XBTUSD",
+      "direction": "SELL",
+      "confidence": 100,
+      "reason": "Bearish crossover: SMA10=71258.86 < SMA30=72222.24",
+      "sma_10": 71258.86,
+      "sma_30": 72222.24,
+      "timestamp": 1776012732,
+      "signature": "0x8c891218860b0e0b8eef8eb158b1500e52a86e5f2a33f7f9966ede7830876f2a3bc0a3cd4de50b90dedcd9906919cbe8361bad925e19f8b4557b5d47b49f1e0d1b"
+    },
+    {
+      "agent_id": 2,
+      "agent_name": "ReversalAgent",
+      "pair": "XBTUSD",
+      "direction": "BUY",
+      "confidence": 15,
+      "reason": "Oversold: RSI=24.77 < 30",
+      "rsi": 24.77,
+      "timestamp": 1776012740,
+      "signature": "0xc83bcd1be37b47ca9b48c5db79f22db78094b8dfb88778a44d438498523023466858225c31f70a57863bf427d2162358ea9974c7bdd9776417f69943c4810e371c"
+    },
+    {
+      "agent_id": 3,
+      "agent_name": "RiskSentinel",
+      "pair": "XBTUSD",
+      "direction": "PROCEED",
+      "confidence": 80,
+      "reason": "Risk OK. Daily PnL: 0.00%, Position limit: 10%",
+      "daily_pnl": 0.0,
+      "max_daily_loss": 2.0,
+      "max_position_size": 0.1,
+      "timestamp": 1776012740,
+      "signature": "0xb5c0b8099c20b5fcf179e2bcab8a6abb15a8a069eaefbfbf6a94d7d88f97d85757a4b8709c06ae3d8f8adf8b97d393f780456ec104465ff38d364abbd25455981c"
+    },
+    {
+      "agent_id": 4,
+      "agent_name": "SentimentAgent",
+      "pair": "XBTUSD",
+      "direction": "HOLD",
+      "confidence": 50,
+      "reason": "Neutral: volume 0.4x avg, price +0.01%",
+      "volume_ratio": 0.43,
+      "price_change_pct": 0.01,
+      "timestamp": 1776012748,
+      "signature": "0x73aaba8ff3ff28dd409add7beaa5e2df4d19dfb42bb65d3b8411df10bf8aee264ac82bf7c37b559db338e2a5d065f7a1023b5b495f2ddee14b74a546b030730e1b"
+    }
+  ],
+  "decision": {
+    "decision": "SELL",
+    "signal": 100,
+    "reason": "MOMENTUM TRIGGER: TrendAgent SELL at 100% for 4 consecutive cycles.",
+    "vote_breakdown": {
+      "TrendAgent": {
+        "direction": "SELL",
+        "confidence": 100,
+        "reputation": 50,
+        "weight": 50.0
+      },
+      "ReversalAgent": {
+        "direction": "BUY",
+        "confidence": 15,
+        "reputation": 50,
+        "weight": 7.5
+      },
+      "SentimentAgent": {
+        "direction": "HOLD",
+        "confidence": 50,
+        "reputation": 50,
+        "weight": 25.0
+      }
+    },
+    "trigger": {
+      "type": "CONSECUTIVE_TREND_SELL",
+      "agent_id": 1,
+      "required_confidence": 100,
+      "required_streak": 3,
+      "observed_streak": 4
+    }
+  },
+  "meta_state": {
+    "trend_sell_100_streak": 4
+  },
+  "cycle_timestamp": "2026-04-12 21:53:04",
+  "timestamp": 1776012784
+}
