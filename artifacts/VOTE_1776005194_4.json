@@ -1,0 +1,12 @@
+{
+  "agent_id": 4,
+  "agent_name": "SentimentAgent",
+  "pair": "XBTUSD",
+  "direction": "SELL",
+  "confidence": 42,
+  "reason": "Bearish volume spike: 1.7x avg, price -0.88%",
+  "volume_ratio": 1.69,
+  "price_change_pct": -0.88,
+  "timestamp": 1776005185,
+  "signature": "0x9611c6f6debd3dbe65619cb702a1c330a80529862084c85888039f1bd4ad95d46522ca5e8b6013f7b4b295d7839430b132e8fdb83b849b8cd25bc574d2ca8cee1b"
+}

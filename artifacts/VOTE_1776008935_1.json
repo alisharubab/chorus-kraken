@@ -1,0 +1,10 @@
+{
+  "agent_id": 1,
+  "agent_name": "TrendAgent",
+  "pair": "XBTUSD",
+  "direction": "HOLD",
+  "confidence": 0,
+  "reason": "Insufficient candle data",
+  "timestamp": 1776008905,
+  "signature": "0xb93fabf53749973faaeb9fc6969b76703027275c05930b7498e72d029be0f79f0da2f948b9e97d63e267aefbc9f655613375104bb957011c07d6a955f8dfd09b1b"
+}

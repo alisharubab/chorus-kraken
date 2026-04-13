@@ -1,0 +1,11 @@
+{
+  "agent_id": 2,
+  "agent_name": "ReversalAgent",
+  "pair": "XBTUSD",
+  "direction": "HOLD",
+  "confidence": 50,
+  "reason": "Neutral: RSI=30.53 (range 30-70)",
+  "rsi": 30.53,
+  "timestamp": 1776008920,
+  "signature": "0x999a786be3aad386145fe6a74138db4f70fd1b378d0939c5834689b0970bc6bb779e5b5e727ceb0d1aa81b5c92b535679a6dfce4ca51bf7cbf4e7d90e613fdb51c"
+}
