@@ -176,7 +176,7 @@ python dashboard/app.py
 ```
 
 Dashboard URL:
-- `http://127.0.0.1:5000`
+- `[https://chorus-kraken--alisharubab7.replit.app]`
 
 ### 5. Optional End-to-End Test
 ```bash
